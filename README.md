@@ -19,14 +19,14 @@ with four server:
 ### Client
 + Messenger(M)
 
-# 初步机制
+# Mechanism
 
 1. M connect to D, get a IP of N, close this conn
 2. M connect to N, hold this conn, do some operation
 3. M send msg to N, M get IP of S from N(this notify also send to peer of M)
 4. M and peer of M exchange msg in this S
 
-# 各个模块的设想
+# conception
 
 1. D: all of short connection / load balance
 2. N: all of long connection, need send notify msg to each other, load balance of S
