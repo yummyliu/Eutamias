@@ -1,41 +1,53 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	ini "github.com/go-ini/ini"
+	"strings"
 )
 
 type Config struct {
-	Nips   string
-	Nports string
+	LogFilePath string
+	Nips        []string
+	Nports      []string
+	cport       int
 }
 
-func read_cfg(cfg_path string) *Config {
-	//ini_:= make(map[string]string)
-	cfg,err := ini.InsensitiveLoad(cfg_path)
+func (con *Config) Read(cfgPath string) error {
+	cfg, err := ini.InsensitiveLoad(cfgPath)
 	if err != nil {
-		log.Fatal(err)
 		return nil
 	}
 
-	serve_sec,err := cfg.GetSection("servers")
+	serve_sec, err := cfg.GetSection("servers")
 	if err != nil {
-		log.Fatal(err)
-		return nil
-	}
-	nports,err := serve_sec.GetKey("nports")
-	if err != nil {
-		log.Fatal(err)
-		return nil
-	}
-	nips,err := serve_sec.GetKey("nips")
-	if err != nil {
-		log.Fatal(err)
 		return nil
 	}
 
-	return &Config{
-		Nips : nips.String(),
-		Nports : nports.String(),
+	_nports, err := serve_sec.GetKey("nports")
+	if err != nil {
+		return nil
 	}
+	nports := strings.Split(_nports.String(), ",")
+
+	_nips, err := serve_sec.GetKey("nips")
+	if err != nil {
+		return nil
+	}
+	nips := strings.Split(_nips.String(), ",")
+
+	lf, err := serve_sec.GetKey("logfilepath")
+	if err != nil {
+		return nil
+	}
+	cport, err := serve_sec.GetKey("clientport")
+	if err != nil {
+		return nil
+	}
+	fmt.Println("daf")
+	con.LogFilePath = lf.String()
+	con.Nips = nips
+	con.Nports = nports
+	con.cport, err = cport.Int()
+	return err
 }

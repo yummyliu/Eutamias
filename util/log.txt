@@ -1,0 +1,9 @@
+00000001--2017-08-23T10:38:07.545+08:00--DEBUG--mylog.go:26 debug secret
+00000002--2017-08-23T10:38:07.545+08:00--INFO--mylog.go:27 info
+00000003--2017-08-23T10:38:07.545+08:00--NOTICE--mylog.go:28 notice
+00000004--2017-08-23T10:38:07.545+08:00--WARNING--mylog.go:29 warning
+00000005--2017-08-23T10:38:07.545+08:00--ERROR--mylog.go:30 err
+crit
+00000006--2017-08-23T10:38:07.546+08:00--CRITICAL--mylog.go:31 crit
+07+08:00--CRITICAL--mylog.go:31 crit
+level:.10s}--{shortfile} crit
