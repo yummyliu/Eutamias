@@ -13,6 +13,14 @@ type Config struct {
 	cport       int
 }
 
+type ConfigError struct {
+	info string
+}
+
+func (c *ConfigError) Error() string{
+	return fmt.Sprintf("%s", c.info)
+}
+
 func (con *Config) Read(cfgPath string) error {
 	cfg, err := ini.InsensitiveLoad(cfgPath)
 	if err != nil {
@@ -35,6 +43,11 @@ func (con *Config) Read(cfgPath string) error {
 		return nil
 	}
 	nips := strings.Split(_nips.String(), ",")
+	if len(nports) != len(nips) {
+		return &ConfigError{
+			info : "nports != nips",
+		}
+	}
 
 	lf, err := serve_sec.GetKey("logfilepath")
 	if err != nil {
@@ -44,7 +57,7 @@ func (con *Config) Read(cfgPath string) error {
 	if err != nil {
 		return nil
 	}
-	fmt.Println("daf")
+	fmt.Println("%s",lf.String())
 	con.LogFilePath = lf.String()
 	con.Nips = nips
 	con.Nports = nports
