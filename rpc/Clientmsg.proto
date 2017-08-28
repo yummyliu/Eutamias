@@ -1,0 +1,9 @@
+syntax = "proto3";
+package rpc;
+
+message ServerTimeReq{
+    }
+
+message ServerTimeRsp {
+    uint64 ServerTime = 1;
+}

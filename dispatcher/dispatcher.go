@@ -1,99 +1,29 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/op/go-logging"
 	"net"
-	"os"
 	"strconv"
 )
 
 type Nserver struct {
 	Ip       string
-	Port     int
-	MaxConn  int
-	CurConn  int
+	Port     int64
+	MaxConn  int64
+	CurConn  int64
 	Hostname string
 }
 
-type ClientChan chan<- string
-
 var (
-	clients  = make(map[ClientChan]bool)
-	entering = make(chan ClientChan)
-	leaving  = make(chan ClientChan)
-	messages = make(chan string)
-
 	config          Config
-	nServerInfos    []Nserver
+	NServerMap	= make(map[string]Nserver) // key:ip+port
 	totalOnlineUser uint64
 	log             *logging.Logger
 )
 
-func init_log(logFilePath string) error {
-	log = logging.MustGetLogger("main")
-	var format = logging.MustStringFormatter(
-		`%{id:08x}--%{time}--%{level:.10s}--%{shortfile} %{message}`,
-	)
 
-	if logFilePath != "" {
-		logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY, 0666)
-		if err != nil {
-			return err
-		}
-		var backend = logging.NewLogBackend(logFile, "D:", 0)
-		var backendFormatter = logging.NewBackendFormatter(backend, format)
-		var backendLeveled = logging.AddModuleLevel(backendFormatter)
-		backendLeveled.SetLevel(logging.DEBUG, "main")
-		logging.SetBackend(backendFormatter)
-	} else {
-		var backend = logging.NewLogBackend(os.Stderr, "D:", 0)
-		var backendFormatter = logging.NewBackendFormatter(backend, format)
-		var backendLeveled = logging.AddModuleLevel(backendFormatter)
-		backendLeveled.SetLevel(logging.DEBUG, "main")
-		logging.SetBackend(backendFormatter)
-	}
-	return nil
-}
-
-func sendOut(conn net.Conn, ch <-chan string) {
-	for msg := range ch {
-		fmt.Fprintln(conn, msg)
-	}
-}
-
-func handleClient(con net.Conn) {
-	log.Info("get one client")
-	out := make(chan string)
-	go sendOut(con, out)
-
-	who := con.RemoteAddr().String()
-	out <- "You are " + who
-
-	input := bufio.NewScanner(con)
-	for input.Scan() {
-		out <- "have got you msg: " + input.Text()
-	}
-
-	con.Close()
-}
-func handleNserver(con net.Conn) {
-	log.Info("get one Nserver")
-	out := make(chan string)
-	go sendOut(con, out)
-
-	who := con.RemoteAddr().String()
-	out <- "You are " + who
-
-	input := bufio.NewScanner(con)
-	for input.Scan() {
-		out <- "have got you msg: " + input.Text()
-	}
-
-	con.Close()
-}
-func Listen(addr string, f func(net.Conn)) {
+func listen(addr string, f func(net.Conn)) {
 	log.Infof("Listen on; %s", addr)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -119,9 +49,13 @@ func main() {
 	}
 
 	// read conf
-	config.Read("dispatcher.ini")
+	err = config.Read("dispatcher.ini")
+	if err != nil {
+		fmt.Println("config read error: ", err)
+	}
 
-	// Listening
-	go Listen("0.0.0.0:"+strconv.Itoa(config.cport), handleClient)
-	Listen("0.0.0.0:"+strconv.Itoa(config.nport), handleNserver)
+	// Listening Notificer
+	go listen("0.0.0.0:"+strconv.Itoa(config.nport), handleNserver)
+	// Listening Client
+	listen("0.0.0.0:"+strconv.Itoa(config.cport), handleClient)
 }
