@@ -1,18 +1,87 @@
 package main
 
 import (
-	"github.com/op/go-logging"
+	"log"
 	"fmt"
 	pb "github.com/yummyliu/Eutamias/rpc"
+	"net"
 	"time"
+	//_ "bufio"
+	"github.com/golang/protobuf/proto"
 )
 
 type ImClient struct {
 	id uint64
 }
 
-func (c *ImClient) GetTime() time {
+func (c *ImClient) GetTime() uint64 {
 	timereq := &pb.ServerTimeReq{}
+	conn, err := net.Dial("tcp", "127.0.0.1:54321")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func (c *net.Conn) {
+		err := conn.Close()
+		if err != nil {
+			log.Print("err")
+		}
+	}(&conn)
 
-	return nil
+	fmt.Fprintf(conn, timereq.String())
+
+	return 0
+}
+func (c *ImClient) login() (net.Conn,error) {
+	conn, err := net.Dial("tcp", "127.0.0.1:54321")
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	return conn, nil
+}
+
+func (c *ImClient) handleRev(Conn net.Conn) {
+	log.Println("handleRev")
+	for {
+		conbytes := make([]byte,100)
+		if _,err := Conn.Read(conbytes); err != nil {
+			log.Fatal(err)
+			return
+		}
+		log.Println(conbytes)
+	}
+}
+func (c *ImClient) sendhb(conn net.Conn, delay time.Duration) {
+	// send hb
+	for {
+		log.Println("sene hb")
+		t := time.Now().Unix()//Format("2017-4-5:1:02:02\n")
+		trsp := &pb.ServerTimeRsp{
+			ServerTime : uint64(t),
+		}
+		outmsg, err := proto.Marshal(trsp);
+		if err != nil {
+			log.Fatalf("failed to encode ServerTimeRsp: %s", err)
+			return
+		}
+		length,err := conn.Write(outmsg)
+		if err != nil {
+			log.Print(err)
+			return
+		}
+		log.Printf("%s,w %d, %d",conn.RemoteAddr().String(),length, t)
+		time.Sleep(delay)
+	}
+}
+
+func main() {
+	client := new(ImClient)
+
+	con,err := client.login()
+	if err != nil {
+		return
+	}
+	go client.sendhb(con, 1000 * time.Millisecond)
+	client.handleRev(con)
 }

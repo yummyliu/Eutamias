@@ -7,7 +7,7 @@ import (
 func init_log(logFilePath string) error {
 	log = logging.MustGetLogger("main")
 	var format = logging.MustStringFormatter(
-		`%{id:08x}--%{time}--%{level:.10s}--%{shortfile} %{message}`,
+		`%{id:08x}--%{time}--%{level:.4s}--%{shortfile} %{message}`,
 	)
 
 	if logFilePath != "" {

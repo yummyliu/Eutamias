@@ -1,10 +1,10 @@
 package main
 
 import (
+//	"bufio"
 	"net"
 	pb "github.com/yummyliu/Eutamias/rpc"
 	"github.com/golang/protobuf/proto"
-	"time"
 	"fmt"
 )
 
@@ -24,28 +24,20 @@ func handleClient(con net.Conn) {
 		}
 	}(con)
 
-	conbytes := make([]byte, 100)
-	_, err := con.Read(conbytes)
-	if (err != nil) {
-		log.Error(err);
-		return
-	}
+	for {
+		conbytes := make([]byte,100)
+		length,err := con.Read(conbytes); 
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		log.Infof("get %d byte",length)
+		stime := &pb.ServerTimeRsp{}
+		if err := proto.Unmarshal(conbytes[:length], stime); err != nil {
+			log.Fatalf("failed to parse servertime: ", err)
+			return
+		}
+		log.Infof("get one %d\n",stime.ServerTime)
 
-	stime := &pb.ServerTimeReq{}
-	if err := proto.Unmarshal(conbytes, stime); err != nil {
-		log.Fatalf("failed to parse servertime: ", err)
-		return
 	}
-
-	t := time.Now().Second()
-	trsp := &pb.ServerTimeRsp{
-		ServerTime : uint64(t),
-	}
-	outmsg, err := proto.Marshal(trsp);
-	if err != nil {
-		log.Fatalf("failed to encode ServerTimeRsp: %s", err)
-		return
-	}
-
-	fmt.Fprintln(con, outmsg)
 }
