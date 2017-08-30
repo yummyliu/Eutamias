@@ -8,6 +8,8 @@ import (
 	"time"
 	//_ "bufio"
 	"github.com/golang/protobuf/proto"
+	"bytes"
+	"encoding/binary"
 )
 
 type ImClient struct {
@@ -75,6 +77,34 @@ func (c *ImClient) sendhb(conn net.Conn, delay time.Duration) {
 	}
 }
 
+func (c *ImClient) sendmsg(conn net.Conn, delay time.Duration) {
+	// send msg
+	for {
+		log.Println("sene msg")
+
+		msg := new(pb.Message)
+		msg.Cmd = 1
+		msg.Seq = 0
+		msg.Version = 1
+//		msg.Msg = "hello"
+
+		buf := new(bytes.Buffer)
+		err := binary.Write(buf, binary.BigEndian, msg)
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+		outmsg := buf.Bytes()
+
+		length,err := conn.Write(outmsg)
+		if err != nil {
+			log.Print(err)
+		}
+		log.Printf("%s,w %d",conn.RemoteAddr().String(),length)
+		time.Sleep(delay)
+	}
+}
+
 func main() {
 	client := new(ImClient)
 
@@ -82,6 +112,6 @@ func main() {
 	if err != nil {
 		return
 	}
-	go client.sendhb(con, 1000 * time.Millisecond)
+	go client.sendmsg(con, 1000 * time.Millisecond)
 	client.handleRev(con)
 }

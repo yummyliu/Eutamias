@@ -4,8 +4,8 @@ import (
 )
 
 type Message struct {
-	cmd uint64
-	seq uint64
-	version uint64
-	msg interface{}
+	Cmd uint64
+	Seq uint64
+	Version uint64
+	//Msg interface{}
 }
