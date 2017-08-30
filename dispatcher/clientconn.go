@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
-//	"bufio"
+	"encoding/gob"
 	"net"
 	pb "github.com/yummyliu/Eutamias/rpc"
-	_ "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto"
 	"fmt"
 )
 
@@ -27,25 +25,21 @@ func handleClient(con net.Conn) {
 	}(con)
 
 	for {
-		conbytes := make([]byte,100)
-		length,err := con.Read(conbytes);
+		var msg pb.Message
+		conn_dec := gob.NewDecoder(con)
+		err := conn_dec.Decode(&msg);
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
-		log.Infof("get %d byte",length)
-		//stime := &pb.ServerTimeRsp{}
-		//if err := proto.Unmarshal(conbytes[:length], stime); err != nil {
-		//	log.Fatalf("failed to parse servertime: ", err)
-		//	return
-		//}
-		buf := bytes.NewReader(conbytes[:length])
-		var msg pb.Message
-		err = binary.Read(buf, binary.BigEndian, &msg)
-		if err != nil {
-			fmt.Println("binary.read failed", err)
+
+		stime := &pb.ServerTimeRsp{}
+		if err := proto.Unmarshal(msg.Msg, stime); err != nil {
+			log.Fatalf("failed to parse servertime: ", err)
 			return
 		}
-		log.Infof("get one %d %d %d %s\n", msg.Cmd, msg.Seq, msg.Version)
+
+		log.Infof("get one %d %d %d %d\n",
+		msg.Cmd, msg.Seq, msg.Version, stime.ServerTime)
 	}
 }
