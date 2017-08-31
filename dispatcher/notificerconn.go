@@ -1,14 +1,22 @@
 package main
 
 import (
+	"encoding/gob"
 	"github.com/golang/protobuf/proto"
 	pb "github.com/yummyliu/Eutamias/rpc"
 	"net"
-	"strconv"
 )
 
-func handleNserver(con net.Conn) {
-	log.Infof("get one Ns, ip=%s",con.RemoteAddr().String())
+type Nserver struct {
+	Ip       string
+	Port     int64
+	MaxConn  int64
+	CurConn  int64
+	Hostname string
+}
+
+func handleClient(con net.Conn) {
+	log.Infof("get one Ns, addr=%s",con.RemoteAddr().String())
 	defer func(con net.Conn) {
 		err := con.Close()
 		if err != nil {
@@ -17,24 +25,36 @@ func handleNserver(con net.Conn) {
 		}
 	}(con)
 
-	conbytes := make([]byte, 100)
-	_, err := con.Read(conbytes)
-	if (err != nil) {
-		log.Error(err);
+	for {
+		var msg pb.Message
+		conn_dec := gob.NewDecoder(con)
+		err := conn_dec.Decode(&msg)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		switch t := msg.Cmd; t {
+		case pb.MsgCmd_C_HEARTBEAT:
+			handleHeartBeat(msg.Msg)
+		case pb.MsgCmd_C_NINFOUPD:
+			handleNserverInfo(msg.Msg)
+		default:
+			log.Error("wrong cmd id")
+		}
+	}
+}
+
+func handleHeartBeat(msg []byte){
+	log.Notice("get hb")
+}
+
+func handleNserverInfo(msg []byte) {
+	ninfo := &pb.Ninfo{}
+	if err := proto.Unmarshal(msg, ninfo); err != nil {
+		log.Fatalf("failed to parse Ninfo: ", err)
 		return
 	}
 
-	dninfo := &pb.Ninfo{}
-	if err := proto.Unmarshal(conbytes, dninfo); err != nil {
-		log.Fatalf("failed to parse dninfo: ", err)
-	}
-	log.Infof("ip= %s; port= %d; MaxConn=%d ", dninfo.Ip, dninfo.Port, dninfo.MaxConn)
-
-	tmpns := new(Nserver)
-	tmpns.Ip = dninfo.Ip
-	tmpns.Port = dninfo.Port
-	tmpns.MaxConn = dninfo.MaxConn
-	tmpns.CurConn = dninfo.CurConn
-	tmpns.Hostname = dninfo.Hostname
-	NServerMap[tmpns.Ip+strconv.Itoa(int(tmpns.Port))] = *tmpns
+	log.Infof("get ninfo from ip=%s", ninfo.Ip)
 }

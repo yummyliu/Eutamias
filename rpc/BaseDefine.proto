@@ -1,0 +1,29 @@
+syntax = "proto3";
+package rpc;
+
+enum MsgCmd {
+    C_DEFAULT = 0;
+	C_HEARTBEAT = 1;
+	C_MSGDATA = 2;
+	C_MSGACK = 3;
+	C_LOGIN = 4;
+	C_LOGOUT = 5;
+	C_NINFOREQ = 6;
+	C_NINFOUPD = 7;
+}
+
+enum OnlineStatus{
+	OS_ONLINE = 0;
+	OS_LEAVE = 1;
+	OS_BUSY = 2;
+	OS_OFFLINE = 3;
+}
+
+enum ResultCode{
+	RC_DEFAULT = 0;
+	RC_OK = 1;
+	RC_WRONGPW = 2;
+	RC_SERVER_ERROR = 3;
+}
+
+

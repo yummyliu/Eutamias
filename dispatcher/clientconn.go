@@ -14,8 +14,8 @@ func sendOut(conn net.Conn, ch <-chan string) {
 	}
 }
 
-func handleClient(con net.Conn) {
-	log.Infof("get one client, ip=%s",con.RemoteAddr().String())
+func handleNserver(con net.Conn) {
+	log.Infof("get one Ns, addr=%s",con.RemoteAddr().String())
 	defer func(con net.Conn) {
 		err := con.Close()
 		if err != nil {
@@ -27,19 +27,27 @@ func handleClient(con net.Conn) {
 	for {
 		var msg pb.Message
 		conn_dec := gob.NewDecoder(con)
-		err := conn_dec.Decode(&msg);
+		err := conn_dec.Decode(&msg)
 		if err != nil {
 			log.Fatal(err)
 			return
 		}
 
-		stime := &pb.ServerTimeRsp{}
-		if err := proto.Unmarshal(msg.Msg, stime); err != nil {
-			log.Fatalf("failed to parse servertime: ", err)
-			return
+		switch t := msg.Cmd; t {
+		case pb.MsgCmd_C_NINFOREQ:
+			handleNserverInfoReq(msg.Msg)
+		default:
+			log.Error("wrong cmd id")
 		}
-
-		log.Infof("get one %d %d %d %d\n",
-		msg.Cmd, msg.Seq, msg.Version, stime.ServerTime)
 	}
+}
+
+func handleNserverInfoReq(msg []byte) {
+	ninfoq := &pb.NinfoReq{}
+	if err := proto.Unmarshal(msg, ninfoq); err != nil {
+		log.Fatalf("failed to parse NinfoReq: ", err)
+		return
+	}
+
+	log.Infof("req ninfo from client=%d", ninfoq.Id)
 }

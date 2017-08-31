@@ -64,7 +64,7 @@ func (c *ImClient) sendmsg(conn net.Conn, delay time.Duration) {
 	for {
 		log.Println("sene msg")
 		//pb
-		t := time.Now().Unix()//Format("2017-4-5:1:02:02\n")
+		t := time.Now().Unix()//Format"2017-4-5:1:02:02\n")
 		trsp := &pb.ServerTimeRsp{
 			ServerTime : uint64(t),
 		}

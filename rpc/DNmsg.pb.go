@@ -12,6 +12,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// import "rpc/BaseDefine.proto";
 type Ninfo struct {
 	Ip       string `protobuf:"bytes,1,opt,name=ip" json:"ip,omitempty"`
 	Port     int64  `protobuf:"varint,2,opt,name=port" json:"port,omitempty"`
@@ -23,7 +24,7 @@ type Ninfo struct {
 func (m *Ninfo) Reset()                    { *m = Ninfo{} }
 func (m *Ninfo) String() string            { return proto.CompactTextString(m) }
 func (*Ninfo) ProtoMessage()               {}
-func (*Ninfo) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
+func (*Ninfo) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
 
 func (m *Ninfo) GetIp() string {
 	if m != nil {
@@ -64,9 +65,9 @@ func init() {
 	proto.RegisterType((*Ninfo)(nil), "rpc.Ninfo")
 }
 
-func init() { proto.RegisterFile("rpc/DNmsg.proto", fileDescriptor1) }
+func init() { proto.RegisterFile("rpc/DNmsg.proto", fileDescriptor2) }
 
-var fileDescriptor1 = []byte{
+var fileDescriptor2 = []byte{
 	// 139 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2f, 0x2a, 0x48, 0xd6,
 	0x77, 0xf1, 0xcb, 0x2d, 0x4e, 0xd7, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x2e, 0x2a, 0x48,

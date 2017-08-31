@@ -1,9 +1,34 @@
 syntax = "proto3";
 package rpc;
 
+import "rpc/BaseDefine.proto";
+
 message ServerTimeReq{
     }
 
 message ServerTimeRsp {
     uint64 ServerTime = 1;
 }
+
+message LoginReq {
+    uint64 id =1;
+    string passwd =2 ;
+    OnlineStatus online_statue = 3;
+    }
+
+message LoginRsp {
+    uint64 id =1;
+    ResultCode result_code =2;
+    string result_str =3;
+    }
+
+message NinfoReq {
+    uint64 id =1;
+    }
+
+message NinfoRsp {
+    uint64 id =1;
+    string Nip =2;
+    uint64 Nport =3;
+    ResultCode rc = 4;
+    }
