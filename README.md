@@ -1,4 +1,5 @@
 # Eutamias
+a IM schema writed in golang
 
 ```
  ______     __  __     ______   ______     __    __     __     ______     ______
@@ -8,26 +9,24 @@
     \/_____/   \/_____/     \/_/   \/_/\/_/   \/_/  \/_/   \/_/   \/_/\/_/   \/_____/
 ```
 ![logo](/doc/logo/eutamias_logo.jpg)
-a IM schema writed in golang
-with four server:
 
-### Server
+## Server
 + Dispatcher(D)
 + Notificer(N)
 + Switcher(S)
 + HttpServer(H)
 
-### Client
+## Client
 + Messenger(M)
 
-# Mechanism
+## Mechanism
 
 1. M connect to D, get a IP of N, close this conn
 2. M connect to N, hold this conn, do some operation
 3. M send msg to N, M get IP of S from N(this notify also send to peer of M)
 4. M and peer of M exchange msg in this S
 
-# conception
+## conception
 
 1. D: all of short connection / load balance
 2. N: all of long connection, need send notify msg to each other, load balance of S
