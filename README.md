@@ -7,6 +7,7 @@
   \ \_____\  \ \_____\    \ \_\  \ \_\ \_\  \ \_\ \ \_\  \ \_\  \ \_\ \_\  \/\_____\ 
     \/_____/   \/_____/     \/_/   \/_/\/_/   \/_/  \/_/   \/_/   \/_/\/_/   \/_____/
 ```
+![logo](/doc/logo/eutamias_logo.jpg)
 a IM schema writed in golang
 with four server:
 
