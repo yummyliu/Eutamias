@@ -13,6 +13,7 @@ import (
 
 type ImClient struct {
 	id uint64
+	online_status pb.OnlineStatus
 }
 
 func (c *ImClient) login() (net.Conn,error) {
@@ -90,3 +91,8 @@ func (c *ImClient) sendmsg(conn net.Conn, delay time.Duration) {
 	}
 }
 
+func (c *ImClient) Run(){
+	for {
+
+	}
+}
