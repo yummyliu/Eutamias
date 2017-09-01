@@ -10,6 +10,7 @@ enum MsgCmd {
 	C_LOGOUT = 5;
 	C_NINFOREQ = 6;
 	C_NINFOUPD = 7;
+    C_SENDMSG = 8;
 }
 
 enum OnlineStatus{

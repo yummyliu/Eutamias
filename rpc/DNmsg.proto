@@ -4,9 +4,9 @@ package rpc;
 //import "rpc/BaseDefine.proto";
 message Ninfo {
     string ip = 1;
-    int64 port = 2;
-    int64 MaxConn = 3;
-    int64 CurConn = 4;
+    uint64 port = 2;
+    uint64 MaxConn = 3;
+    uint64 CurConn = 4;
     string Hostname = 5;
 }
 

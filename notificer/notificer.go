@@ -5,13 +5,17 @@ import (
 	"github.com/op/go-logging"
 	"net"
 	"strconv"
+	_ "github.com/golang/protobuf/proto"
+	_ "github.com/yummyliu/Eutamias/rpc"
 )
 
 var (
 	config          Config
-	NServerMap	= make(map[string]Nserver) // key:ip+port
-	totalOnlineUser uint64
+	OnlineUser		uint64
 	log             *logging.Logger
+)
+const (
+	MaxUser		uint64 = 1000
 )
 
 
@@ -32,9 +36,10 @@ func listen(addr string, f func(net.Conn)) {
 	}
 }
 
+
 func main() {
 	// read conf
-	err := config.Read("dispatcher.ini")
+	err := config.Read("notificer.ini")
 	if err != nil {
 		fmt.Println("config read error: ", err)
 	}
@@ -46,8 +51,13 @@ func main() {
 		return
 	}
 
-	// Listening Notificer
-	go listen("0.0.0.0:"+strconv.Itoa(config.nport), handleNserver)
+	// Send My info to dispatcher
+	err = updateInfo()
+	if err != nil {
+		log.Info(err)
+		return
+	}
+
 	// Listening Client
-	listen("0.0.0.0:"+strconv.Itoa(config.cport), handleClient)
+	listen("0.0.0.0:"+strconv.Itoa(int(config.port)), handleClient)
 }

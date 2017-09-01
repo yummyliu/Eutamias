@@ -22,6 +22,16 @@ message LoginRsp {
     string result_str =3;
     }
 
+message LogoutReq {
+    uint64 id = 1;
+    }
+
+message LogoutRsp {
+    uint64 id = 1;
+    ResultCode result_code =2;
+    string result_str = 3;
+    }
+
 message NinfoReq {
     uint64 id =1;
     }
@@ -31,4 +41,15 @@ message NinfoRsp {
     string Nip =2;
     uint64 Nport =3;
     ResultCode rc = 4;
+    }
+
+message SendMsgReq {
+    uint64 id = 1;
+    uint64 session_id = 2;
+    }
+message SendMsgRsp {
+    ResultCode result_code = 1;
+    string result_str = 2;
+    string Sip = 3;
+    uint64 Sport = 4;
     }

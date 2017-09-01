@@ -7,8 +7,10 @@ import (
 
 type Config struct {
 	logPath		string
-	cport       int
-	nport		int
+	port        uint64
+	ip			string
+	dIp			string
+	dPort		uint64
 }
 
 type ConfigError struct {
@@ -34,19 +36,33 @@ func (con *Config) Read(cfgPath string) error {
 		return err
 	}
 	con.logPath = lf.String()
-	cport, err := serve_sec.GetKey("ClientListenport")
+	listen_port, err := serve_sec.GetKey("Listenport")
 	if err != nil {
 		return err
 	}
-	con.cport, err = cport.Int()
+	con.port, err = listen_port.Uint64()
 	if err != nil {
 		return err
 	}
-	nport, err := serve_sec.GetKey("NserverListenPort")
+	listen_ip, err := serve_sec.GetKey("ListenIp")
 	if err != nil {
 		return err
 	}
-	con.nport, err = nport.Int()
+	con.ip = listen_ip.String()
+
+	dip, err := serve_sec.GetKey("dispatcherIp")
+	if err != nil {
+		return err
+	}
+	con.dIp= dip.String()
+	if err != nil {
+		return err
+	}
+	dport, err := serve_sec.GetKey("dispatcherPort")
+	if err != nil {
+		return err
+	}
+	con.dPort, err = dport.Uint64()
 	if err != nil {
 		return err
 	}
