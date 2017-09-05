@@ -11,6 +11,8 @@ enum MsgCmd {
 	C_NINFOREQ = 6;
 	C_NINFOUPD = 7;
     C_SENDMSG = 8;
+    C_CREATESESSION =9;
+    C_CLOSESESSION = 10;
 }
 
 enum OnlineStatus{

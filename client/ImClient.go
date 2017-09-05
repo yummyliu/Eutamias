@@ -9,58 +9,95 @@ import (
 	_ "encoding/binary"
 	"encoding/gob"
 	"fmt"
+	"strconv"
+)
+
+const (
+	HEARTBEAT_DURATION = 3000
+
+	CREATESESSION = 0
+	SENDMSG = 1
+	LOGOUT = 2
+
 )
 
 type ImClient struct {
-	Conn net.Conn
-	Sconn net.Conn
+
+	Nconn net.Conn
+	SconnList map[uint64]net.Conn
 
 	id uint64
 	online_status pb.OnlineStatus
 }
 
-const (
-	HEARTBEAT_DURATION = 3000
-
-	SENDMSG = 1
-	LOGOUT = 2
-)
-
-func (c *ImClient) writeMsg(Cmd cmd, uint64 seq, uint64 outmsg []byte) {
-	msg := new(pb.Message)
-	msg.Cmd = cmd
-	msg.Seq = seq
-	msg.Msg = outmsg
-
-	conn_enc := gob.NewEncoder(c.Conn)
-	err = conn_enc.Encode(msg)
-	_,err := c.Conn.Write(outmsg)
+func (c *ImClient) writeMsgToN(cmd pb.MsgCmd, seq uint64, outmsg []byte) {
+	msg := pb.Message{
+		Cmd : cmd,
+		Seq : seq,
+		Msg : outmsg,
+	}
+	conn_enc := gob.NewEncoder(c.Nconn)
+	err := conn_enc.Encode(msg)
+	if err != nil {
+		log.Print(err)
+	}
+	_,err = c.Nconn.Write(outmsg)
 	if err != nil {
 		log.Print(err)
 	}
 }
-func (c *ImClient) login() (net.Conn,error) {
+
+func (c *ImClient) login() error {
 	conn, err := net.Dial("tcp", "127.0.0.1:54321")
 	if err != nil {
 		log.Fatal(err)
-		return nil, err
+		return err
 	}
 
-	return conn, nil
+	c.Nconn = conn
+
+	return nil
 }
 
-func (c *ImClient) handleRev(Conn net.Conn) {
-	log.Println("handleRev")
+func (c *ImClient) handleRevFromN() {
+	log.Println("handleRev---")
 	for {
 		conbytes := make([]byte,100)
-		if _,err := Conn.Read(conbytes); err != nil {
+		if _,err := c.Nconn.Read(conbytes); err != nil {
 			log.Fatal(err)
 			return
 		}
-		log.Println(conbytes)
+		var msg pb.Message
+		conn_dec := gob.NewDecoder(c.Nconn)
+		err := conn_dec.Decode(&msg)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		switch t := msg.Cmd; t {
+		case pb.MsgCmd_C_CREATESESSION:
+			c.handleCreateSession(msg.Msg)
+		default:
+			log.Fatal("wrong cmd id")
+		}
+
 	}
 }
-func (c *ImClient) sendhb(delay time.Duration) {
+func (c *ImClient) handleCreateSession(msg []byte) {
+	createSessionRsq := &pb.CreateSessionRsp{}
+	if err := proto.Unmarshal(msg, createSessionRsq); err != nil {
+		log.Fatalf("failed to parse createSessionRsq: ", err)
+		return
+	}
+	sconn, err := net.Dial("tcp", createSessionRsq.Sip+strconv.Itoa(int(createSessionRsq.Sport)))
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	c.SconnList[createSessionRsq.Peerid] = sconn
+}
+func (c *ImClient) sendhbtoN(delay time.Duration) {
 	for {
 		log.Println("send hb")
 		hb := &pb.HeartBeat{}
@@ -69,57 +106,63 @@ func (c *ImClient) sendhb(delay time.Duration) {
 			log.Fatalf("failed to encode HeartBeat: %s", err)
 			return
 		}
-		c.writeMsg(pb.MsgCmd_C_HEARTBEAT, 0, outmsg)
+		c.writeMsgToN(pb.MsgCmd_C_HEARTBEAT, 0, outmsg)
 	}
 }
 
-func (c *ImClient) sendmsg(uint64 peerid) {
+func (c *ImClient) createSession(peerid uint64) {
 	log.Println("create session")
 	cs := &pb.CreateSessionReq{
-		Fromid : c.id
-		Peerid : peerid
+		Fromid : c.id,
+		Peerid : peerid,
 	}
-
-	for {
-		log.Println("sene hb")
-		hb := &pb.HeartBeat{}
-		outmsg, err := proto.Marshal(hb);
-		if err != nil {
-			log.Fatalf("failed to encode HeartBeat: %s", err)
-			return
-		}
-
-		msg := new(pb.Message)
-		msg.Cmd = pb.MsgCmd_C_HEARTBEAT
-		msg.Seq = 0
-		msg.Version = 1
-		msg.Msg = outmsg
-
-		conn_enc := gob.NewEncoder(conn)
-		err = conn_enc.Encode(msg)
-		length,err := conn.Write(outmsg)
-		if err != nil {
-			log.Print(err)
-		}
+	outmsg, err := proto.Marshal(cs)
+	if err != nil {
+		log.Fatalf("failed to encode HeartBeat: %s", err)
+		return
 	}
+	c.writeMsgToN(pb.MsgCmd_C_CREATESESSION, 0, outmsg)
+}
+func (c *ImClient) sendmsg(peerid uint64, msgdata string) {
+	log.Println("send msg")
+	md := &pb.MsgData{
+		Id : c.id,
+		SessionId : peerid,
+		Content : msgdata,
+	}
+	outmsg, err := proto.Marshal(md)
+	if err != nil {
+		log.Fatalf("failed to encode MsgData: %s", err)
+		return
+	}
+	c.writeMsgToN(pb.MsgCmd_C_CREATESESSION, 0, outmsg)
 }
 
-func (c *ImClient) logout(conn net.Conn) {
+func (c *ImClient) logout() {
+	log.Println("logout")
 }
 
 func (c *ImClient) RunCmd(conn net.Conn){
-	fmt.Println("1: send msg; 2: logout")
-	c.login()
-	go handleRev(conn)
-	go c.sendhb(HEARTBEAT_DURATION)
+	err := c.login()
+	if err != nil {
+		fmt.Print(err)
+		return
+	}
+	go c.handleRevFromN()
+	go c.sendhbtoN(HEARTBEAT_DURATION)
 	for {
-		var cmd []int
+		var cmd []string
 		fmt.Scanln(&cmd)
-		switch cmd {
+		cc,_:= strconv.Atoi(cmd[0])
+		switch cc {
+		case CREATESESSION:
+			peerid,_ := strconv.Atoi(cmd[1])
+			c.createSession(uint64(peerid))
 		case SENDMSG:
-			sendmsg(cmd[1], cmd[2])
+			peerid,_ := strconv.Atoi(cmd[1])
+			c.sendmsg(uint64(peerid), cmd[2])
 		case LOGOUT:
-			logout()
+			c.logout()
 		}
 	}
 }

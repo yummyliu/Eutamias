@@ -43,15 +43,34 @@ message NinfoRsp {
     ResultCode rc = 4;
     }
 
-message SendMsgData {
+message MsgData {
     uint64 id = 1;
     uint64 session_id = 2;
+    string content =3;
     }
+
 message MsgDataReadAck {
     ResultCode result_code = 1;
     string result_str = 2;
     string Sip = 3;
     uint64 Sport = 4;
+    }
+
+message UnreadMsgReq {
+    uint64 id = 1;
+    }
+
+message UnreadMsgInfo {
+    uint64 fromid = 1;
+    uint64 session_id = 2;
+    string content = 3;
+    }
+
+message UnreadMsgRsp {
+    ResultCode result_code = 1;
+    string result_str = 2;
+    repeated UnreadMsgInfo UnreadMsg_list = 3;
+    uint64 msg_count = 4;
     }
 
 message CreateSessionReq {
