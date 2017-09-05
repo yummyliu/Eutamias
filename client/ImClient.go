@@ -24,7 +24,7 @@ const (
 type ImClient struct {
 
 	Nconn net.Conn
-	SconnList map[uint64]net.Conn
+	SconnMap map[uint64]net.Conn
 
 	id uint64
 	online_status pb.OnlineStatus
@@ -42,6 +42,23 @@ func (c *ImClient) writeMsgToN(cmd pb.MsgCmd, seq uint64, outmsg []byte) {
 		log.Print(err)
 	}
 	_,err = c.Nconn.Write(outmsg)
+	if err != nil {
+		log.Print(err)
+	}
+}
+
+func (c *ImClient) writeMsgToS(cmd pb.MsgCmd, seq uint64, outmsg []byte, sconn net.Conn) {
+	msg := pb.Message{
+		Cmd : cmd,
+		Seq : seq,
+		Msg : outmsg,
+	}
+	conn_enc := gob.NewEncoder(c.Nconn)
+	err := conn_enc.Encode(msg)
+	if err != nil {
+		log.Print(err)
+	}
+	_,err = sconn.Write(outmsg)
 	if err != nil {
 		log.Print(err)
 	}
@@ -95,7 +112,7 @@ func (c *ImClient) handleCreateSession(msg []byte) {
 		log.Fatal(err)
 		return
 	}
-	c.SconnList[createSessionRsq.Peerid] = sconn
+	c.SconnMap[createSessionRsq.Peerid] = sconn
 }
 func (c *ImClient) sendhbtoN(delay time.Duration) {
 	for {
@@ -125,6 +142,11 @@ func (c *ImClient) createSession(peerid uint64) {
 }
 func (c *ImClient) sendmsg(peerid uint64, msgdata string) {
 	log.Println("send msg")
+	sconn, prs := c.SconnMap[peerid]
+	if !prs {
+		log.Println("session do not create")
+		return
+	}
 	md := &pb.MsgData{
 		Id : c.id,
 		SessionId : peerid,
@@ -135,7 +157,7 @@ func (c *ImClient) sendmsg(peerid uint64, msgdata string) {
 		log.Fatalf("failed to encode MsgData: %s", err)
 		return
 	}
-	c.writeMsgToN(pb.MsgCmd_C_CREATESESSION, 0, outmsg)
+	c.writeMsgToS(pb.MsgCmd_C_CREATESESSION, 0, outmsg, sconn)
 }
 
 func (c *ImClient) logout() {
