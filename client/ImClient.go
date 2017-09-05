@@ -5,17 +5,40 @@ import (
 	pb "github.com/yummyliu/Eutamias/rpc"
 	"net"
 	"time"
-	//_ "bufio"
 	"github.com/golang/protobuf/proto"
 	_ "encoding/binary"
 	"encoding/gob"
+	"fmt"
 )
 
 type ImClient struct {
+	Conn net.Conn
+	Sconn net.Conn
+
 	id uint64
 	online_status pb.OnlineStatus
 }
 
+const (
+	HEARTBEAT_DURATION = 3000
+
+	SENDMSG = 1
+	LOGOUT = 2
+)
+
+func (c *ImClient) writeMsg(Cmd cmd, uint64 seq, uint64 outmsg []byte) {
+	msg := new(pb.Message)
+	msg.Cmd = cmd
+	msg.Seq = seq
+	msg.Msg = outmsg
+
+	conn_enc := gob.NewEncoder(c.Conn)
+	err = conn_enc.Encode(msg)
+	_,err := c.Conn.Write(outmsg)
+	if err != nil {
+		log.Print(err)
+	}
+}
 func (c *ImClient) login() (net.Conn,error) {
 	conn, err := net.Dial("tcp", "127.0.0.1:54321")
 	if err != nil {
@@ -37,62 +60,66 @@ func (c *ImClient) handleRev(Conn net.Conn) {
 		log.Println(conbytes)
 	}
 }
-func (c *ImClient) sendhb(conn net.Conn, delay time.Duration) {
-	// send hb
+func (c *ImClient) sendhb(delay time.Duration) {
 	for {
-		log.Println("sene hb")
-		t := time.Now().Unix()//Format("2017-4-5:1:02:02\n")
-		trsp := &pb.ServerTimeRsp{
-			ServerTime : uint64(t),
-		}
-		outmsg, err := proto.Marshal(trsp);
+		log.Println("send hb")
+		hb := &pb.HeartBeat{}
+		outmsg, err := proto.Marshal(hb);
 		if err != nil {
-			log.Fatalf("failed to encode ServerTimeRsp: %s", err)
+			log.Fatalf("failed to encode HeartBeat: %s", err)
 			return
 		}
-		length,err := conn.Write(outmsg)
-		if err != nil {
-			log.Print(err)
-			return
-		}
-		log.Printf("%s,w %d, %d",conn.RemoteAddr().String(),length, t)
-		time.Sleep(delay)
+		c.writeMsg(pb.MsgCmd_C_HEARTBEAT, 0, outmsg)
 	}
 }
 
-func (c *ImClient) sendmsg(conn net.Conn, delay time.Duration) {
-	// send msg
+func (c *ImClient) sendmsg(uint64 peerid) {
+	log.Println("create session")
+	cs := &pb.CreateSessionReq{
+		Fromid : c.id
+		Peerid : peerid
+	}
+
 	for {
-		log.Println("sene msg")
-		//pb
-		t := time.Now().Unix()//Format"2017-4-5:1:02:02\n")
-		trsp := &pb.ServerTimeRsp{
-			ServerTime : uint64(t),
-		}
-		outmsg, err := proto.Marshal(trsp);
+		log.Println("sene hb")
+		hb := &pb.HeartBeat{}
+		outmsg, err := proto.Marshal(hb);
 		if err != nil {
-			log.Fatalf("failed to encode ServerTimeRsp: %s", err)
+			log.Fatalf("failed to encode HeartBeat: %s", err)
 			return
 		}
-		//msg
+
 		msg := new(pb.Message)
-		msg.Cmd = 1
+		msg.Cmd = pb.MsgCmd_C_HEARTBEAT
 		msg.Seq = 0
 		msg.Version = 1
 		msg.Msg = outmsg
-		//write to conn
+
 		conn_enc := gob.NewEncoder(conn)
 		err = conn_enc.Encode(msg)
+		length,err := conn.Write(outmsg)
 		if err != nil {
 			log.Print(err)
 		}
-		log.Printf("%s,",conn.RemoteAddr().String())
-		time.Sleep(delay)
 	}
 }
 
-func (c *ImClient) Run(){
-	for {
+func (c *ImClient) logout(conn net.Conn) {
+}
 
+func (c *ImClient) RunCmd(conn net.Conn){
+	fmt.Println("1: send msg; 2: logout")
+	c.login()
+	go handleRev(conn)
+	go c.sendhb(HEARTBEAT_DURATION)
+	for {
+		var cmd []int
+		fmt.Scanln(&cmd)
+		switch cmd {
+		case SENDMSG:
+			sendmsg(cmd[1], cmd[2])
+		case LOGOUT:
+			logout()
+		}
 	}
 }

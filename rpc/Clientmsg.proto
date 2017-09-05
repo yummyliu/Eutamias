@@ -43,13 +43,39 @@ message NinfoRsp {
     ResultCode rc = 4;
     }
 
-message SendMsgReq {
+message SendMsgData {
     uint64 id = 1;
     uint64 session_id = 2;
     }
-message SendMsgRsp {
+message MsgDataReadAck {
     ResultCode result_code = 1;
     string result_str = 2;
     string Sip = 3;
     uint64 Sport = 4;
+    }
+
+message CreateSessionReq {
+    uint64 fromid = 1;
+    uint64 peerid = 2;
+    }
+
+message CreateSessionRsp {
+    uint64 fromid = 1;
+    uint64 peerid = 2;
+    uint64 session_id = 3;
+    ResultCode result_code = 4;
+    string result_str = 5;
+    string Sip = 6;
+    uint64 Sport = 7;
+    }
+
+message CloseSessionReq {
+    uint64 fromid = 1;
+    uint64 peerid = 2;
+    uint64 session_id = 3;
+    }
+
+message CloseSessionRsq {
+    ResultCode result_code = 1;
+    string result_str = 2;
     }

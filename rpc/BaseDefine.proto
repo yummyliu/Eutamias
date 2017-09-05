@@ -27,4 +27,5 @@ enum ResultCode{
 	RC_SERVER_ERROR = 3;
 }
 
-
+message HeartBeat {
+    }

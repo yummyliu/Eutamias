@@ -14,22 +14,42 @@ a IM schema writed in golang
 + Dispatcher(D)
 + Notificer(N)
 + Switcher(S)
-+ HttpServer(H)
++ HttpServer(H) (in the next future, for http interface of system, now don not have one)
 
 ## Client
-+ Messenger(M)
++ Client(C)
 
 ## Mechanism
 
-1. M connect to D, get a IP of N, close this conn
-2. M connect to N, hold this conn, do some operation
-3. M send msg to N, M get IP of S from N(this notify also send to peer of M)
-4. M and peer of M exchange msg in this S
-
+1. C login
+    1. connect to D, get a IP of N, close this conn
+    2. C connect to N, hold this conn, do some operation
+    3. get login response from N
+        1. have Sip/port, connect to the S, notify S peerC is online
+        2. have unread msg, pull unreadMsg
+2. C send msg
+    1. C send create session request to N
+    2. if peer C is Online
+        1. N notify peerC with theS info
+        2. peerC connect to theS
+        3. reponse IP/port of theS to C
+        4. C connect to theS
+        5. C & peerC send msg to each other
+        6. C & peerC send msgack to theS
+        7. theS maintain msg that don not get an ack
+        8. if theS do not get hb from C for HEARTBEATTIMEOUT
+            1. theS close the connection
+            2. save the unread msg
+    3. if peer C is Not Online
+        1. reponse IP/port of theS to C
+        2. C connect to theS
+        3. C send msg to theS
+            1. if peerC is still Offline, S save unread msg
+            2. if peerC is Online, send to peerC
 ## conception
 
 1. D: all of short connection / load balance
 2. N: all of long connection, need send notify msg to each other, load balance of S
 3. S: send msg to each other
 4. H: http interface for getting some system infomation
-5. M: client for test
+5. C: client of this im system
