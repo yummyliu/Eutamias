@@ -55,6 +55,6 @@ func handleNserverInfo(msg []byte) {
 		log.Fatalf("failed to parse Ninfo: ", err)
 		return
 	}
-
 	log.Infof("get ninfo from ip=%s", ninfo.Ip)
 }
+

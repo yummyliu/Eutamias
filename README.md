@@ -46,6 +46,7 @@ a IM schema writed in golang
         3. C send msg to theS
             1. if peerC is still Offline, S save unread msg
             2. if peerC is Online, send to peerC
+3. Eutamias does not save msg, only N connect to DB
 ## conception
 
 1. D: all of short connection / load balance

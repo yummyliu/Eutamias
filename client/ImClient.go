@@ -41,10 +41,6 @@ func (c *ImClient) writeMsgToN(cmd pb.MsgCmd, seq uint64, outmsg []byte) {
 	if err != nil {
 		log.Print(err)
 	}
-	_,err = c.Nconn.Write(outmsg)
-	if err != nil {
-		log.Print(err)
-	}
 }
 
 func (c *ImClient) writeMsgToS(cmd pb.MsgCmd, seq uint64, outmsg []byte, sconn net.Conn) {
@@ -55,10 +51,6 @@ func (c *ImClient) writeMsgToS(cmd pb.MsgCmd, seq uint64, outmsg []byte, sconn n
 	}
 	conn_enc := gob.NewEncoder(c.Nconn)
 	err := conn_enc.Encode(msg)
-	if err != nil {
-		log.Print(err)
-	}
-	_,err = sconn.Write(outmsg)
 	if err != nil {
 		log.Print(err)
 	}

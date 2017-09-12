@@ -28,7 +28,6 @@ func (con *Config) Read(cfgPath string) error {
 	if err != nil {
 		return err
 	}
-
 	lf, err := serve_sec.GetKey("logfilepath")
 	if err != nil {
 		return err

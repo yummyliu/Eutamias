@@ -36,18 +36,27 @@ func handleNserver(con net.Conn) {
 		switch t := msg.Cmd; t {
 		case pb.MsgCmd_C_NINFOREQ:
 			handleNserverInfoReq(msg.Msg)
+		case pb.MsgCmd_C_NINFOUPD:
+			handleNserverInfoUpd(msg.Msg)
 		default:
 			log.Error("wrong cmd id")
 		}
 	}
 }
-
 func handleNserverInfoReq(msg []byte) {
 	ninfoq := &pb.NinfoReq{}
 	if err := proto.Unmarshal(msg, ninfoq); err != nil {
 		log.Fatalf("failed to parse NinfoReq: ", err)
 		return
 	}
-
 	log.Infof("req ninfo from client=%d", ninfoq.Id)
+}
+
+func handleNserverInfoUpd(msg []byte) {
+	ninfo := &pb.Ninfo{}
+	if err := proto.Unmarshal(msg, ninfo); err != nil {
+		log.Fatalf("failed to parse Ninfo: ", err)
+		return
+	}
+	log.Infof("req ninfo, nip:%s, nport:%d", ninfo.Ip, ninfo.Port)
 }

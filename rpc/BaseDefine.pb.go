@@ -19,6 +19,8 @@ It has these top-level messages:
 	LogoutRsp
 	NinfoReq
 	NinfoRsp
+	SendMsgReq
+	SendMsgRsp
 	MsgData
 	MsgDataReadAck
 	UnreadMsgReq

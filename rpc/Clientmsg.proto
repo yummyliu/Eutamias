@@ -43,6 +43,14 @@ message NinfoRsp {
     ResultCode rc = 4;
     }
 
+message SendMsgReq {
+    uint64 id = 1;
+    uint64 peerid = 2;
+}
+message SendMsgRsp {
+    uint64 id = 1;
+    uint64 peerid = 2;
+}
 message MsgData {
     uint64 id = 1;
     uint64 session_id = 2;

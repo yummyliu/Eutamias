@@ -52,7 +52,8 @@ func handleNinfoUpt() {
 }
 
 func updateInfo() error{
-	addr := config.dIp+strconv.Itoa(int(config.dPort))
+	addr := config.dIp+":"+strconv.Itoa(int(config.dPort))
+	log.Info(addr)
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
@@ -69,17 +70,21 @@ func updateInfo() error{
 	ninfo.MaxConn = MaxUser
 	ninfo.Ip	= config.ip
 	ninfo.Port = config.port
-
 	outmsg, err := proto.Marshal(ninfo);
 	if err != nil {
 		log.Fatalf("failed to encode Ninfo: %s", err)
 		return err
 	}
-	_, err = conn.Write(outmsg)
-	if err != nil {
-		log.Info(err)
-		return err
-	}
 
+	msg := pb.Message{
+		Cmd : pb.MsgCmd_C_NINFOUPD,
+		Seq : 0,
+		Msg : outmsg,
+	}
+	conn_enc := gob.NewEncoder(conn)
+	err = conn_enc.Encode(msg)
+	if err != nil {
+		log.Error(err)
+	}
 	return nil
 }
