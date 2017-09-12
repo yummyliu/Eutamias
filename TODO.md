@@ -1,5 +1,5 @@
 1. CLient get Ninfo
 2. Client login
-3. client conect to S
-4. peerclient connect to S
+3. client sendmsgreq, and get s info
+4. client conect to S  &peerclient connect to S
 5. send msg
