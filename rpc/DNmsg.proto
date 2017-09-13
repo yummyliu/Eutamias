@@ -2,6 +2,7 @@ syntax = "proto3";
 package rpc;
 
 //import "rpc/BaseDefine.proto";
+
 message Ninfo {
     string ip = 1;
     uint64 port = 2;

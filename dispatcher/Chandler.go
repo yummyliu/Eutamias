@@ -22,7 +22,7 @@ func handleClient(con net.Conn) {
 		conn_dec := gob.NewDecoder(con)
 		err := conn_dec.Decode(&msg)
 		if err != nil {
-			log.Fatal(err)
+			log.Debug(err.Error(),": ", msg.Cmd)
 			return
 		}
 

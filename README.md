@@ -54,3 +54,6 @@ a IM schema writed in golang
 3. S: send msg to each other
 4. H: http interface for getting some system infomation
 5. C: client of this im system
+
+## NOTE
+/usr/local/protobuf/bin/protoc -I=/home/lym/go/src/github.com/yummyliu/Eutamias --go_out=/home/lym/go/src/github.com/yummyliu/Eutamias --go_out=plugins=grpc:rpc /home/lym/go/src/github.com/yummyliu/Eutamias/rpc/*.proto

@@ -1,0 +1,21 @@
+syntax = "proto3";
+package rpc;
+
+import "BaseDefine.proto";
+
+// The GetNinfo service definition.
+service DService{
+  // Sends a greeting
+  rpc GetMyNserver(NinfoReq) returns (NinfoRsp) {}
+}
+
+message NinfoReq {
+    uint64 id =1;
+}
+
+message NinfoRsp {
+    uint64 id =1;
+    string Nip =2;
+    uint64 Nport =3;
+    ResultCode rc = 4;
+}
