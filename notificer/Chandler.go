@@ -28,36 +28,60 @@ func handleClient(con net.Conn) {
 
 		switch t := msg.Cmd; t {
 		case pb.MsgCmd_C_HEARTBEAT:
-			handleHeartBeat(msg.Msg)
+			handleHeartBeat(msg, con)
 		case pb.MsgCmd_C_LOGIN:
-			handleLogin(msg.Msg)
+			handleLogin(msg, con)
 		case pb.MsgCmd_C_LOGOUT:
-			handleLogout(msg.Msg)
+			handleLogout(msg, con)
 		case pb.MsgCmd_C_SENDMSG:
-			handleSendmsg(msg.Msg)
+			handleSendmsg(msg, con)
 		default:
 			log.Error("wrong cmd id")
 		}
 	}
 }
 
-func handleHeartBeat(msg []byte){
+func writeMsgToC(cmd pb.MsgCmd, seq uint64, outmsg []byte, con net.Conn) {
+	msg := pb.Message{
+		Cmd : cmd,
+		Seq : seq,
+		Msg : outmsg,
+	}
+	conn_enc := gob.NewEncoder(con)
+	err := conn_enc.Encode(msg)
+	if err != nil {
+		log.Error(err.Error())
+	}
+}
+
+func handleHeartBeat(msg pb.Message, con net.Conn){
 	log.Notice("get hb")
 }
 
-func handleLogin(msg []byte) {
+func handleLogin(msg pb.Message, con net.Conn) {
 	login := &pb.LoginReq{}
-	if err := proto.Unmarshal(msg, login); err != nil {
+	if err := proto.Unmarshal(msg.Msg, login); err != nil {
 		log.Fatalf("failed to parse login: ", err)
 		return
 	}
+log.Infof("login id=%d",login.GetId())
 
-	log.Infof("login id=%d",login.GetId())
+	loginRsp := &pb.LoginRsp{
+		Id : login.GetId(),
+		ResultCode : pb.ResultCode_RC_OK,
+	}
+	outbytes, err := proto.Marshal(loginRsp);
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	writeMsgToC(pb.MsgCmd_C_LOGIN, msg.Seq, outbytes, con)
 }
 
-func handleLogout(msg []byte) {
+func handleLogout(msg pb.Message, con net.Conn) {
 	logout := &pb.LogoutReq{}
-	if err := proto.Unmarshal(msg, logout); err != nil {
+	if err := proto.Unmarshal(msg.Msg, logout); err != nil {
 		log.Fatalf("failed to parse logout: ", err)
 		return
 	}
@@ -65,9 +89,9 @@ func handleLogout(msg []byte) {
 	log.Infof("logout id=%d",logout.GetId())
 }
 
-func handleSendmsg(msg []byte){
+func handleSendmsg(msg pb.Message, con net.Conn){
 	sendmsg := &pb.SendMsgReq{}
-	if err := proto.Unmarshal(msg, sendmsg); err != nil {
+	if err := proto.Unmarshal(msg.Msg, sendmsg); err != nil {
 		log.Fatalf("failed to parse sendmsg: ", err)
 		return
 	}

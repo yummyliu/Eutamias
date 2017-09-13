@@ -9,7 +9,7 @@ import (
 
 var (
 	config          Config
-	NServerMap	= make(map[string]Nserver) // key:ip+port
+	NServerMap	= make(map[string]Nserver) // key:ip+":"+port
 	totalOnlineUser uint64
 	log             *logging.Logger
 )

@@ -2,16 +2,17 @@ package main
 
 import (
 	"encoding/gob"
-	"net"
-	pb "github.com/yummyliu/Eutamias/rpc"
 	"github.com/golang/protobuf/proto"
-	"fmt"
+	pb "github.com/yummyliu/Eutamias/rpc"
+	"net"
 )
 
-func sendOut(conn net.Conn, ch <-chan string) {
-	for msg := range ch {
-		fmt.Fprintln(conn, msg)
-	}
+type Nserver struct {
+	Ip       string
+	Port     uint64
+	MaxConn  uint64
+	CurConn  uint64
+	Hostname string
 }
 
 func handleNserver(con net.Conn) {
@@ -34,8 +35,8 @@ func handleNserver(con net.Conn) {
 		}
 
 		switch t := msg.Cmd; t {
-		case pb.MsgCmd_C_NINFOREQ:
-			handleNserverInfoReq(msg.Msg)
+		case pb.MsgCmd_C_HEARTBEAT:
+			handleHeartBeat(msg.Msg)
 		case pb.MsgCmd_C_NINFOUPD:
 			handleNserverInfoUpd(msg.Msg)
 		default:
@@ -43,13 +44,9 @@ func handleNserver(con net.Conn) {
 		}
 	}
 }
-func handleNserverInfoReq(msg []byte) {
-	ninfoq := &pb.NinfoReq{}
-	if err := proto.Unmarshal(msg, ninfoq); err != nil {
-		log.Fatalf("failed to parse NinfoReq: ", err)
-		return
-	}
-	log.Infof("req ninfo from client=%d", ninfoq.Id)
+
+func handleHeartBeat(msg []byte){
+	log.Notice("get hb")
 }
 
 func handleNserverInfoUpd(msg []byte) {
@@ -59,4 +56,11 @@ func handleNserverInfoUpd(msg []byte) {
 		return
 	}
 	log.Infof("req ninfo, nip:%s, nport:%d", ninfo.Ip, ninfo.Port)
+	NServerMap[ninfo.GetIp()+":"+strconv.Itoa(ninfo.GetPort())] = Nserver{
+		Ip : ninfo.GetIp(),
+		Port : ninfo.GetPort(),
+		MaxConn : ninfo.GetMaxConn(),
+		CurConn : ninfo.GetCurConn(),
+		Hostname : ninfo.GetHostname(),
+	}
 }
