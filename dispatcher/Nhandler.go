@@ -5,6 +5,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	pb "github.com/yummyliu/Eutamias/rpc"
 	"net"
+	"strconv"
 )
 
 type Nserver struct {
@@ -30,7 +31,7 @@ func handleNserver(con net.Conn) {
 		conn_dec := gob.NewDecoder(con)
 		err := conn_dec.Decode(&msg)
 		if err != nil {
-			log.Fatal(err)
+			log.Debug(err.Error())
 			return
 		}
 
@@ -56,7 +57,7 @@ func handleNserverInfoUpd(msg []byte) {
 		return
 	}
 	log.Infof("req ninfo, nip:%s, nport:%d", ninfo.Ip, ninfo.Port)
-	NServerMap[ninfo.GetIp()+":"+strconv.Itoa(ninfo.GetPort())] = Nserver{
+	NServerMap[ninfo.GetIp()+":"+strconv.Itoa(int(ninfo.GetPort()))] = Nserver{
 		Ip : ninfo.GetIp(),
 		Port : ninfo.GetPort(),
 		MaxConn : ninfo.GetMaxConn(),

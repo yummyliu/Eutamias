@@ -56,7 +56,7 @@ func (c *ImClient) writeMsgToS(cmd pb.MsgCmd, seq uint64, outmsg []byte, sconn n
 	}
 }
 
-func (c *ImClient) login() error {
+func (c *ImClient) Login() error {
 	conn, err := net.Dial("tcp", "127.0.0.1:54321")
 	if err != nil {
 		log.Fatal(err)
@@ -68,7 +68,7 @@ func (c *ImClient) login() error {
 	return nil
 }
 
-func (c *ImClient) handleRevFromN() {
+func (c *ImClient) HandleRevFromN() {
 	log.Println("handleRev---")
 	for {
 		conbytes := make([]byte,100)
@@ -86,14 +86,14 @@ func (c *ImClient) handleRevFromN() {
 
 		switch t := msg.Cmd; t {
 		case pb.MsgCmd_C_CREATESESSION:
-			c.handleCreateSession(msg.Msg)
+			c.createSessionhandler(msg.Msg)
 		default:
 			log.Fatal("wrong cmd id")
 		}
 
 	}
 }
-func (c *ImClient) handleCreateSession(msg []byte) {
+func (c *ImClient) createSessionhandler(msg []byte) {
 	createSessionRsq := &pb.CreateSessionRsp{}
 	if err := proto.Unmarshal(msg, createSessionRsq); err != nil {
 		log.Fatalf("failed to parse createSessionRsq: ", err)
@@ -106,7 +106,7 @@ func (c *ImClient) handleCreateSession(msg []byte) {
 	}
 	c.SconnMap[createSessionRsq.Peerid] = sconn
 }
-func (c *ImClient) sendhbtoN(delay time.Duration) {
+func (c *ImClient) SendhbtoN(delay time.Duration) {
 	for {
 		log.Println("send hb")
 		hb := &pb.HeartBeat{}
@@ -119,7 +119,7 @@ func (c *ImClient) sendhbtoN(delay time.Duration) {
 	}
 }
 
-func (c *ImClient) createSession(peerid uint64) {
+func (c *ImClient) CreateSession(peerid uint64) {
 	log.Println("create session")
 	cs := &pb.CreateSessionReq{
 		Fromid : c.id,
@@ -132,7 +132,7 @@ func (c *ImClient) createSession(peerid uint64) {
 	}
 	c.writeMsgToN(pb.MsgCmd_C_CREATESESSION, 0, outmsg)
 }
-func (c *ImClient) sendmsg(peerid uint64, msgdata string) {
+func (c *ImClient) Sendmsg(peerid uint64, msgdata string) {
 	log.Println("send msg")
 	sconn, prs := c.SconnMap[peerid]
 	if !prs {
@@ -152,18 +152,18 @@ func (c *ImClient) sendmsg(peerid uint64, msgdata string) {
 	c.writeMsgToS(pb.MsgCmd_C_CREATESESSION, 0, outmsg, sconn)
 }
 
-func (c *ImClient) logout() {
+func (c *ImClient) Logout() {
 	log.Println("logout")
 }
 
 func (c *ImClient) RunCmd(conn net.Conn){
-	err := c.login()
+	err := c.Login()
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
-	go c.handleRevFromN()
-	go c.sendhbtoN(HEARTBEAT_DURATION)
+	go c.HandleRevFromN()
+	go c.SendhbtoN(HEARTBEAT_DURATION)
 	for {
 		var cmd []string
 		fmt.Scanln(&cmd)
@@ -171,12 +171,12 @@ func (c *ImClient) RunCmd(conn net.Conn){
 		switch cc {
 		case CREATESESSION:
 			peerid,_ := strconv.Atoi(cmd[1])
-			c.createSession(uint64(peerid))
+			c.CreateSession(uint64(peerid))
 		case SENDMSG:
 			peerid,_ := strconv.Atoi(cmd[1])
-			c.sendmsg(uint64(peerid), cmd[2])
+			c.Sendmsg(uint64(peerid), cmd[2])
 		case LOGOUT:
-			c.logout()
+			c.Logout()
 		}
 	}
 }

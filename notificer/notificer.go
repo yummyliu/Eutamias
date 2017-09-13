@@ -74,8 +74,7 @@ func main() {
 	}
 
 	// Listening Client
-	listen("0.0.0.0:"+strconv.Itoa(int(config.port)), handleClient)
-}
+	listen("0.0.0.0:"+strconv.Itoa(int(config.port)), handleClient) }
 
 func registerInfoUntilSuccess(delay time.Duration) error{
 	log.Info("delay: %d", delay)
