@@ -34,15 +34,6 @@ func handleClient(con net.Conn) {
 		}
 	}
 }
-
-func findBestNserver() (string, uint64){
-	//  TODO:  <13-09-17, complete it > //
-	for _,v := range NServerMap {
-		return v.Ip, v.Port
-	}
-	return "",0
-}
-
 func handleNserverInfoReq(msg []byte, con net.Conn) {
 	ninfoq := &pb.NinfoReq{}
 	if err := proto.Unmarshal(msg, ninfoq); err != nil {

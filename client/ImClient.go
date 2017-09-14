@@ -9,6 +9,8 @@ import (
 	_ "encoding/binary"
 	"encoding/gob"
 	"fmt"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 	"strconv"
 )
 
@@ -26,7 +28,7 @@ type ImClient struct {
 	Nconn net.Conn
 	SconnMap map[uint64]net.Conn
 
-	id uint64
+	Id uint64
 	online_status pb.OnlineStatus
 }
 
@@ -56,8 +58,8 @@ func (c *ImClient) writeMsgToS(cmd pb.MsgCmd, seq uint64, outmsg []byte, sconn n
 	}
 }
 
-func (c *ImClient) Login() error {
-	conn, err := net.Dial("tcp", "127.0.0.1:54321")
+func (c *ImClient) Login(naddr string) error {
+	conn, err := net.Dial("tcp", naddr)
 	if err != nil {
 		log.Fatal(err)
 		return err
@@ -122,7 +124,7 @@ func (c *ImClient) SendhbtoN(delay time.Duration) {
 func (c *ImClient) CreateSession(peerid uint64) {
 	log.Println("create session")
 	cs := &pb.CreateSessionReq{
-		Fromid : c.id,
+		Fromid : c.Id,
 		Peerid : peerid,
 	}
 	outmsg, err := proto.Marshal(cs)
@@ -140,7 +142,7 @@ func (c *ImClient) Sendmsg(peerid uint64, msgdata string) {
 		return
 	}
 	md := &pb.MsgData{
-		Id : c.id,
+		Id : c.Id,
 		SessionId : peerid,
 		Content : msgdata,
 	}
@@ -156,8 +158,35 @@ func (c *ImClient) Logout() {
 	log.Println("logout")
 }
 
-func (c *ImClient) RunCmd(conn net.Conn){
-	err := c.Login()
+func (c *ImClient) GetNinfoFromD(daddr string) (string, uint64){
+	dconn, err := grpc.Dial(daddr, grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("did not connect: %s", daddr)
+	}
+	defer func(con* grpc.ClientConn) {
+		err := con.Close()
+		if err != nil {
+			log.Print(err)
+			return
+		}
+	}(dconn)
+
+	rpcclient := pb.NewDServiceClient(dconn)
+
+	ninfo, err := rpcclient.GetMyNserver(context.Background(), &pb.NinfoReq{
+		Id : c.Id,
+	})
+	if err != nil {
+		log.Fatalf("could not get ninfo: %v", err)
+	}
+	log.Printf("nnifo %s:%d", ninfo.GetNip(), ninfo.GetNport())
+	return ninfo.GetNip(), ninfo.GetNport()
+}
+
+func (c *ImClient) RunCmd(daddr string){
+	nip, nport := c.GetNinfoFromD(daddr)
+
+	err := c.Login(nip+":"+strconv.Itoa(int(nport)))
 	if err != nil {
 		fmt.Print(err)
 		return

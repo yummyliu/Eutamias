@@ -10,11 +10,11 @@ service DService{
 }
 
 message NinfoReq {
-    uint64 id =1;
+    uint64 Id =1;
 }
 
 message NinfoRsp {
-    uint64 id =1;
+    uint64 Id =1;
     string Nip =2;
     uint64 Nport =3;
     ResultCode rc = 4;
