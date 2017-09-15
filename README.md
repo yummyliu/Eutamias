@@ -23,7 +23,7 @@ a IM schema writed in golang
 
 1. dispatcher: load-balance of notificer
 2. notificer: register in dispatcher ,
-3. switcher: register in all notificer, user map
+3. switcher: register in all notificer, maintain user map of all user, so switcher can switch msg between themn
 
 //1. C login
 //    1. connect to D, get a IP of N, close this conn
