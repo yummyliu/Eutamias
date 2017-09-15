@@ -12,6 +12,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -66,6 +67,19 @@ func (c *ImClient) Login(naddr string) error {
 	}
 
 	c.Nconn = conn
+//
+//	log.Println("Login")
+//	cs := &pb.CreateSessionReq{
+//		Fromid : c.Id,
+//		Peerid : peerid,
+//	}
+//	outmsg, err := proto.Marshal(cs)
+//	if err != nil {
+//		log.Fatalf("failed to encode HeartBeat: %s", err)
+//		return
+//	}
+//	c.writeMsgToN(pb.MsgCmd_C_CREATESESSION, 0, outmsg)
+//
 
 	return nil
 }
@@ -92,7 +106,6 @@ func (c *ImClient) HandleRevFromN() {
 		default:
 			log.Fatal("wrong cmd id")
 		}
-
 	}
 }
 func (c *ImClient) createSessionhandler(msg []byte) {
@@ -192,10 +205,11 @@ func (c *ImClient) RunCmd(daddr string){
 		return
 	}
 	go c.HandleRevFromN()
-	go c.SendhbtoN(HEARTBEAT_DURATION)
+//	go c.SendhbtoN(HEARTBEAT_DURATION)
 	for {
-		cmd := make([]string,5)
-		fmt.Scanln(&cmd)
+		var cmds string
+		fmt.Scanf("%q", &cmds)
+		cmd := strings.Split(cmds, " ")
 		cc,_:= strconv.Atoi(cmd[0])
 		switch cc {
 		case CREATESESSION:

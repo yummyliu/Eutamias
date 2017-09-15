@@ -8,7 +8,7 @@ import (
 )
 
 func handleClient(con net.Conn) {
-	log.Infof("get one Ds, addr=%s",con.RemoteAddr().String())
+	log.Infof("get one Client, addr=%s",con.RemoteAddr().String())
 	defer func(con net.Conn) {
 		err := con.Close()
 		if err != nil {
