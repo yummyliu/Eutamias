@@ -64,7 +64,7 @@ func handleLogin(msg pb.Message, con net.Conn) {
 		log.Fatalf("failed to parse login: ", err)
 		return
 	}
-log.Infof("login id=%d",login.GetId())
+	log.Infof("login id=%d",login.GetId())
 
 	loginRsp := &pb.LoginRsp{
 		Id : login.GetId(),

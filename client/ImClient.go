@@ -17,9 +17,9 @@ import (
 const (
 	HEARTBEAT_DURATION = 3000
 
-	CREATESESSION = 0
-	SENDMSG = 1
-	LOGOUT = 2
+	CREATESESSION = 1
+	SENDMSG = 2
+	LOGOUT = 3
 
 )
 
@@ -194,7 +194,7 @@ func (c *ImClient) RunCmd(daddr string){
 	go c.HandleRevFromN()
 	go c.SendhbtoN(HEARTBEAT_DURATION)
 	for {
-		var cmd []string
+		cmd := make([]string,5)
 		fmt.Scanln(&cmd)
 		cc,_:= strconv.Atoi(cmd[0])
 		switch cc {
@@ -206,6 +206,8 @@ func (c *ImClient) RunCmd(daddr string){
 			c.Sendmsg(uint64(peerid), cmd[2])
 		case LOGOUT:
 			c.Logout()
+		default:
+			log.Printf("wrong cmd %s",cmd)
 		}
 	}
 }
